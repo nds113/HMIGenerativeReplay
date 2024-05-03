@@ -15,14 +15,14 @@ class QADataset(Dataset):
     def __init__(self, data_paths, data_type, gen_token, encoder_special_token_ids, 
                  decoder_special_token_ids, decoder_tokenizer, encoder_tokenizer,
                  data_dir, encoder_max_len, decoder_max_len, n_workers = 4,
-                 use_sep =False, num_samples = 2500, extra_data=[]):
+                 use_sep =False, num_samples = 2500, extra_data=[], use_encoder=True):
         
         """
         Instantiate encoder-decoder training dataset
         """
 
         self.data_type = data_type
-        self.use_encoder = True
+        self.use_encoder = use_encoder
         self.gen_token = gen_token
         self.use_sep = use_sep
         self.data_dir = data_dir
@@ -65,19 +65,6 @@ class QADataset(Dataset):
 
         self.data = []
         self.max_a_len = 0
-        # if (
-        #     len(data_paths) == 1
-        #     and data_paths[0] is not None
-        #     and ("wiki" in data_paths[0] or "woz" in data_paths[0])
-        # ):
-            # data = self._sort_by_index(data)
-            # args.n_workers = 1
-            # if "wiki" in data_paths[0]:
-            #     answers_file = "wikisql_answers.json"
-            # elif "woz" in data_paths[0]:
-            #     answers_file = "woz.en_answers.json"
-            # with open(os.path.join(self.data_dir, answers_file), "r") as f:
-            #     self.answers = json.load(f)
         if len(data) > 0:
             self.data_tokenization(data)
 

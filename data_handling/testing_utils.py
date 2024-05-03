@@ -1,7 +1,6 @@
 import collections
 import re
 import string
-from dataset_specific_utils.logical_forms import computeLFEM
 
 def f1_score(prediction, ground_truth):
     prediction_tokens = prediction.split()
@@ -23,16 +22,7 @@ def exact_match(prediction, ground_truth):
 
 
 def computeF1(outputs, targets):
-    return (
-        sum(
-            [
-                metric_max_over_ground_truths(f1_score, o, t)
-                for o, t in zip(outputs, targets)
-            ]
-        )
-        / len(outputs)
-        * 100
-    )
+    return (sum([metric_max_over_ground_truths(f1_score, o, t)for o, t in zip(outputs, targets)])/ len(outputs)* 100)
 
 def dict_cmp(d1, d2):
     def cmp(a, b):
@@ -119,17 +109,13 @@ def computeEM(outputs, targets):
     ]
     return sum(outs) / len(outputs) * 100
 
-def calculate_test_score(data, logical_form=False, dialogue=False):
+def calculate_test_score(data):
 
     greedy = [datum[0] for datum in data]
     answer = [datum[1] for datum in data]
 
     metric_keys = []
     metric_values = []
-    if logical_form:
-        lfem, answer = computeLFEM(greedy, answer)
-        metric_keys += ["lfem"]
-        metric_values += [lfem]
 
     em = computeEM(greedy, answer)
     metric_keys.append("em")
@@ -141,18 +127,6 @@ def calculate_test_score(data, logical_form=False, dialogue=False):
     metric_keys.extend(["nf1", "nem"])
     metric_values.extend([nf1, nem])
 
-    if dialogue:
-        joint_goal_em, request_em, turn_goal_em, answer = computeDialogue(
-            greedy, answer
-        )
-        avg_dialogue = (joint_goal_em + request_em) / 2
-        metric_keys += [
-            "joint_goal_em",
-            "turn_request_em",
-            "turn_goal_em",
-            "avg_dialogue",
-        ]
-        metric_values += [joint_goal_em, request_em, turn_goal_em, avg_dialogue]
     metric_dict = collections.OrderedDict(list(zip(metric_keys, metric_values)))
     return metric_dict
 

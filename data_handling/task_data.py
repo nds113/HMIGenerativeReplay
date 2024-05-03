@@ -12,48 +12,19 @@ def pad_all_to_max_len(batch, val):
 
 def varlen_collate_fn(data, decoder_special_token_ids=None, encoder_special_token_ids=None, n_gpus=1):
 
-    cqs = torch.tensor(
-        pad_all_to_max_len(
-            [datum["dec_examples"]["cq"] for datum in data],
-            decoder_special_token_ids["pad_token"],
-        )
-    )
+    cqs = torch.tensor(pad_all_to_max_len([datum["dec_examples"]["cq"] for datum in data],decoder_special_token_ids["pad_token"],))
     len_cqs = torch.tensor([datum["dec_examples"]["len_cq"] for datum in data])
-    cqas = torch.tensor(
-        pad_all_to_max_len(
-            [datum["dec_examples"]["cqa"] for datum in data],
-            decoder_special_token_ids["pad_token"],
-        )
-    )
+    cqas = torch.tensor(pad_all_to_max_len([datum["dec_examples"]["cqa"] for datum in data],decoder_special_token_ids["pad_token"],))
     len_cqas = torch.tensor([datum["dec_examples"]["len_cqa"] for datum in data])
-    qa_Ys = torch.tensor(
-        pad_all_to_max_len([datum["dec_examples"]["qa_Y"] for datum in data], -1)
-    )
-    gen_Ys = torch.tensor(
-        pad_all_to_max_len([datum["dec_examples"]["gen_Y"] for datum in data], -1)
-    )
+    qa_Ys = torch.tensor(pad_all_to_max_len([datum["dec_examples"]["qa_Y"] for datum in data], -1))
+    gen_Ys = torch.tensor(pad_all_to_max_len([datum["dec_examples"]["gen_Y"] for datum in data], -1))
     is_replays = torch.tensor([datum["is_replay"] for datum in data])
 
+    cls_cq = None
     if data[0]["enc_examples"] is not None:
-        cls_cq = torch.tensor(
-            pad_all_to_max_len(
-                [datum["enc_examples"]["cls_cq"] for datum in data],
-                encoder_special_token_ids["pad_token"],
-            )
-        )
-        return (
-            cls_cq,
-            cqs,
-            len_cqs,
-            cqas,
-            len_cqas,
-            qa_Ys,
-            gen_Ys,
-            is_replays,
-        )
-
+        cls_cq = torch.tensor(pad_all_to_max_len([datum["enc_examples"]["cls_cq"] for datum in data],encoder_special_token_ids["pad_token"],))
     return (
-        None,
+        cls_cq,
         cqs,
         len_cqs,
         cqas,
@@ -62,8 +33,6 @@ def varlen_collate_fn(data, decoder_special_token_ids=None, encoder_special_toke
         gen_Ys,
         is_replays,
     )
-
-
 
 def create_dataloader(dataset, data_type, batch_size, n_workers, encoder_special_token_ids, decoder_special_token_ids, max_batch_size=16):
 

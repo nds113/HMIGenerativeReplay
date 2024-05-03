@@ -194,7 +194,21 @@ def generate_sequence(model, generation_samples, qa_results, all_pasts, max_leng
             input_ids = torch.stack(input_ids)
             feature = torch.stack(feature) if feature else None
             for layer_id in range(decoder_config.n_layer):
-                past[layer_id] = torch.stack(past[layer_id], dim=1)
+
+                # Find maximum sequence length and hidden dimension size
+                max_seq_length = max(p.size(2) for p in past[layer_id])
+                max_hidden_size = max(p.size(3) for p in past[layer_id])
+
+                # Pad each tensor to have the same max sequence length and hidden size
+                past_padded = [F.pad(p, 
+                                    (0, max_hidden_size - p.size(3),  # Right padding for hidden dimension
+                                    0, max_seq_length - p.size(2)),  # Right padding for sequence length
+                                    "constant", decoder_special_token_ids["pad_token"])
+                            for p in past[layer_id]]
+
+                # Stack the uniformly padded tensors
+                past[layer_id] = torch.stack(past_padded, dim=1)
+
             all_outputs = model(input_ids=input_ids.cuda(), feature=feature, past=past)
 
             outputs = all_outputs[0]
@@ -243,7 +257,7 @@ def logits_to_tokens(next_logits, top_k=1):
     return next_tokens
 
 
-def retrieve_task_map(data_dir, n_train_epochs):
+def retrieve_task_map(data_dir, n_train_epochs=9):
 
     task_map = {
 
